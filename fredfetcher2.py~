@@ -1,0 +1,161 @@
+from fredapi import Fred
+import pandas as pd
+from datetime import datetime, timedelta
+import time
+
+def get_fred_data(api_key, start_date, end_date):
+    """
+    Download all available FRED series from our mapping
+    """
+    # Initialize FRED API
+    fred = Fred(api_key=api_key)
+
+    # Define FRED series mapping with corrected IDs
+    # Format: 'friendly_name': ('series_id', 'description')
+    fred_series = {
+        'SP500': ('SP500', 'S&P 500'),
+        'CHINA_GDP': ('MKTGDPCNA646NWDB', 'China GDP'),
+        'UK_GDP': ('UKNGDP', 'UK GDP'),  # Changed from MKTGDPGBA646NWDB
+        'US_GDP': ('GDP', 'US GDP'),
+        'UK_UNEMPLOYMENT': ('LMUNRRTTGBM156S', 'UK Unemployment Rate'),  # Changed from LRUN64TTGBQ156S
+        'CHINA_POP': ('POPTOTCNA647NWDB', 'China Population'),  # Changed from POPCN
+        'UK_POP': ('POPTOTGBA647NWDB', 'UK Population'),  # Changed from POPGBR
+        'US_POP': ('POPTOTUSA647NWDB', 'US Population'),  # Changed from POPTHM
+        'UK_INTEREST_RATE': ('BOEBR', 'UK Bank Rate'),  # Changed from IR3TIB01GBM156N
+        'US_INTEREST_RATE': ('FEDFUNDS', 'US Federal Funds Rate'),
+        'UK_3M_YIELD': ('GBR3MTB', 'UK 3-month Treasury Bill'),  # Changed from IR3TIB01GBM156N
+        'US_3M_YIELD': ('DTB3', 'US 3-month Treasury Bill'),  # Changed from TB3MS
+        'GERMANY_3M_YIELD': ('IR3TIB01DEM156N', 'German 3-month Interbank Rate'),
+        'GERMANY_2Y_YIELD': ('IRLTLT01DEM156N', 'German 2-year Government Bond'),
+        'UK_2Y_YIELD': ('IRLTLT01GBM156N', 'UK 2-year Government Bond'),
+        'US_2Y_YIELD': ('DGS2', 'US 2-year Treasury'),
+        'UK_10Y_YIELD': ('IRLTLT01GBM156N', 'UK 10-year Government Bond'),
+        'US_10Y_YIELD': ('DGS10', 'US 10-year Treasury'),
+        'GERMANY_10Y_YIELD': ('IRLTLT01DEM156N', 'German 10-year Government Bond'),
+        'CHINA_M2': ('MYAGM2CNM189N', 'China M2'),  # Changed from MABMM201CNM189S
+        'UK_M2': ('MANMM101GBM189S', 'UK M2'),  # Changed from MABMM201GBM189S
+        'US_M2': ('M2SL', 'US M2'),
+        'UK_CPI': ('GBRCPIALLMINMEI', 'UK CPI'),  # Changed from CPIUKA
+        'UK_TRADE_BAL': ('BPBLTD01GBQ637S', 'UK Trade Balance'),  # Changed from BOPBCA_GB
+        'UK_CURRENT_ACC': ('BPCABP01GBQ657S', 'UK Current Account'),  # Changed from BOPBCA_GB
+        'UK_FOREX_RESERVES': ('TRESEGGBM052N', 'UK Forex Reserves'),
+        'CLI': ('USALOLITONOSTSAM', 'US Leading Indicators'),  # Changed from OECDLOCO
+        'NFCI': ('NFCI', 'National Financial Conditions Index'),
+        'VIX': ('VIXCLS', 'VIX'),
+        'BRENT_OIL': ('DCOILBRENTEU', 'Brent Crude Oil'),
+        'GOLD': ('GOLDAMGBD228NLBM', 'Gold Fixing Price'),
+        'COPPER': ('PCOPPUSDM', 'Global price of Copper')
+    }
+
+    # Initialize dictionary to store results
+    data = {}
+    metadata = {}
+
+    # Download each series
+    for name, (series_id, description) in fred_series.items():
+        try:
+            print(f"Downloading {name} ({description})...")
+
+            # Get series info first
+            series_info = fred.get_series_info(series_id)
+            metadata[name] = {
+                'frequency': series_info.frequency,
+                'units': series_info.units,
+                'seasonal_adjustment': series_info.seasonal_adjustment,
+                'last_updated': series_info.last_updated
+            }
+
+            # Get the series data
+            series = fred.get_series(series_id, start_date, end_date)
+            data[name] = series
+            print(f"✓ Successfully downloaded {len(series)} observations")
+            time.sleep(0.5)  # Add delay to avoid hitting rate limits
+
+        except Exception as e:
+            print(f"✗ Error downloading {name}: {str(e)}")
+            continue
+
+    # Convert to DataFrame
+    df = pd.DataFrame(data)
+
+    # Save metadata
+    metadata_df = pd.DataFrame(metadata).T
+
+    return df, metadata_df
+
+def check_polygon_tickers(api_key):
+    """
+    Check availability of market indices in Polygon.io
+    """
+    from polygon import RESTClient
+
+    # Updated list of indices and their tickers
+    indices = {
+        'FTSE 100': ['UKX.L', 'GB100.L', 'FTSE.L'],  # UK
+        'ASX 200': ['AS51.AX', 'XJO.AX'],  # Australia
+        'DAX': ['DAX.DE', 'GER30.DE'],  # Germany
+        'Euro STOXX 50': ['SX5E.EU', 'EU50.EU'],  # Europe
+        'CSI 300': ['399300.SZ', '000300.SS'],  # China
+        # ETFs that track these indices
+        'FTSE ETF': ['ISF.L', 'VUKE.L', 'FTF'],  # iShares Core FTSE 100 & Vanguard FTSE 100
+        'ASX ETF': ['STW.AX', 'IOZ.AX'],  # SPDR S&P/ASX 200 & iShares Core S&P/ASX 200
+        'DAX ETF': ['EXS1.DE', 'DAXEX.DE', 'DAX'],  # iShares Core DAX
+        'Euro STOXX ETF': ['SXRT.DE', 'FEZ'],  # iShares Core EURO STOXX 50
+        'CSI 300 ETF': ['ASHR', '510300.SS']  # Xtrackers Harvest CSI 300
+    }
+
+    client = RESTClient(api_key)
+    available_tickers = {}
+
+    for index_name, possible_tickers in indices.items():
+        for ticker in possible_tickers:
+            try:
+                # Try to get details for this ticker
+                details = client.get_ticker_details(ticker)
+                available_tickers[index_name] = {
+                    'ticker': ticker,
+                    'name': details.name if hasattr(details, 'name') else None,
+                    'market': details.market if hasattr(details, 'market') else None,
+                    'type': details.type if hasattr(details, 'type') else None
+                }
+                print(f"✓ Found {index_name}: {ticker}")
+                break
+            except Exception as e:
+                print(f"✗ Ticker {ticker} not available")
+                continue
+
+    return available_tickers
+
+if __name__ == "__main__":
+    fred_api_key = "YOUR_FRED_API_KEY"
+    polygon_api_key = "YOUR_POLYGON_API_KEY"
+
+    # Set date range
+    end_date = datetime.now()
+    start_date = end_date - timedelta(days=365*5)  # 5 years of data
+
+    # Get FRED data
+    print("\nDownloading FRED data...")
+    fred_data, fred_metadata = get_fred_data(
+        fred_api_key,
+        start_date.strftime('%Y-%m-%d'),
+        end_date.strftime('%Y-%m-%d')
+    )
+
+    # Save to CSV
+    fred_data.to_csv('fred_data.csv')
+    fred_metadata.to_csv('fred_metadata.csv')
+    print("\nSaved FRED data to fred_data.csv and metadata to fred_metadata.csv")
+
+    # Check Polygon.io availability
+    print("\nChecking Polygon.io tickers...")
+    available_tickers = check_polygon_tickers(polygon_api_key)
+
+    # Save available tickers to CSV
+    pd.DataFrame(available_tickers).T.to_csv('polygon_available_tickers.csv')
+    print("\nSaved Polygon.io ticker information to polygon_available_tickers.csv")
+
+    # Print summary
+    print("\nSummary:")
+    print(f"FRED series downloaded: {len(fred_data.columns)}")
+    print(f"Polygon.io tickers found: {len(available_tickers)}")

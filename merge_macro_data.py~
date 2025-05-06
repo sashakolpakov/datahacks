@@ -1,0 +1,102 @@
+# ----------------------------------------------
+# Script: merge_macro_data.py
+# Description: Combines GBPAUD.csv with World Bank and FRED indicators
+# ----------------------------------------------
+
+import pandas as pd
+import wbgapi as wb
+import os
+from pandas_datareader import data as pdr
+from datetime import datetime
+
+# --- CONFIG ---
+os.environ['FRED_API_KEY'] = 'your_api_key_here'  # Replace or load securely
+
+# --- STEP 1: Load Daily Dataset ---
+df_daily = pd.read_csv('GBPAUD.csv', parse_dates=['date'])
+df_daily['year'] = df_daily['date'].dt.year
+
+# --- STEP 2: Pull World Bank Indicators (ISO-3 country codes) ---
+indicator_map = {
+    'Australia GDP': ('NY.GDP.MKTP.CD', 'AUS'),
+    'China GDP': ('NY.GDP.MKTP.CD', 'CHN'),
+    'UK GDP': ('NY.GDP.MKTP.CD', 'GBR'),
+    'US GDP': ('NY.GDP.MKTP.CD', 'USA'),
+    'UK Unemployment': ('SL.UEM.TOTL.ZS', 'GBR'),
+    'AUS Labor Force': ('SL.TLF.TOTL.IN', 'AUS'),
+    'UK Labor Force': ('SL.TLF.TOTL.IN', 'GBR'),
+    'Australia population': ('SP.POP.TOTL', 'AUS'),
+    'China population': ('SP.POP.TOTL', 'CHN'),
+    'UK population': ('SP.POP.TOTL', 'GBR'),
+    'US population': ('SP.POP.TOTL', 'USA'),
+    'AUS CPI': ('FP.CPI.TOTL.ZG', 'AUS'),
+    'UK CPI': ('FP.CPI.TOTL.ZG', 'GBR'),
+    'AUS Acc Bal': ('BN.CAB.XOKA.GD.ZS', 'AUS'),
+    'UK Acc Bal': ('BN.CAB.XOKA.GD.ZS', 'GBR'),
+    'AUS forex reserves': ('FI.RES.TOTL.CD', 'AUS'),
+    'UK forex reserves': ('FI.RES.TOTL.CD', 'GBR'),
+}
+
+wb_frames = []
+for label, (indicator, country) in indicator_map.items():
+    try:
+        df = wb.data.DataFrame(indicator, economy=country, labels=False, time='all', numericTimeKeys=True)
+        df = df.rename(columns={df.columns[0]: label})
+        wb_frames.append((label, df[label]))
+    except Exception as e:
+        print(f"❌ Failed for {label} ({indicator}, {country}): {e}")
+
+# Validate and clean World Bank frames
+wb_frames_clean = []
+for label, frame in wb_frames:
+    try:
+        frame.index = frame.index.astype(int)
+        wb_frames_clean.append(frame)
+    except Exception as e:
+        print(f"⚠️ Skipping {label}: could not convert index to int. Index head: {frame.index[:5]}")
+        print(frame.head())
+
+if wb_frames_clean:
+    df_wb = pd.concat(wb_frames_clean, axis=1)
+    df_wb.index.name = 'year'
+else:
+    df_wb = pd.DataFrame()
+
+# --- STEP 3: Pull FRED Indicators (Daily) ---
+fred_series = {
+    'US Federal Funds Rate': 'FEDFUNDS',
+    'US 10-Year Yield': 'GS10',
+    'US CPI': 'CPIAUCSL',
+    'US Unemployment Rate': 'UNRATE'
+}
+
+fred_frames = []
+start = df_daily['date'].min()
+end = df_daily['date'].max()
+
+for label, code in fred_series.items():
+    try:
+        series = pdr.DataReader(code, 'fred', start, end)
+        series.rename(columns={code: label}, inplace=True)
+        fred_frames.append(series)
+    except Exception as e:
+        print(f"⚠️ Warning: Failed to fetch {label} from FRED — {e}")
+
+df_fred = pd.concat(fred_frames, axis=1) if fred_frames else pd.DataFrame()
+
+# --- STEP 4: Merge World Bank (annual) ---
+df_merged = df_daily.copy()
+if not df_wb.empty:
+    df_merged = df_merged.merge(df_wb, how='left', left_on='year', right_index=True)
+
+# --- STEP 5: Merge FRED (daily) ---
+if not df_fred.empty:
+    df_merged = df_merged.merge(df_fred, how='left', left_on='date', right_index=True)
+
+# --- STEP 6: Forward-fill Missing Values ---
+df_merged.ffill(inplace=True)
+df_merged.drop(columns=['year'], inplace=True, errors='ignore')
+
+# --- STEP 7: Save ---
+df_merged.to_csv('GBPAUD_enriched.csv', index=False)
+print("✅ Enriched dataset saved as GBPAUD_enriched.csv")

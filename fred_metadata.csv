@@ -1,0 +1,29 @@
+,frequency,units,seasonal_adjustment,last_updated
+SP500,"Daily, Close",Index,Not Seasonally Adjusted,2025-05-02 19:11:38-05
+CHINA_GDP,Annual,Current U.S. Dollars,Not Seasonally Adjusted,2024-12-17 14:10:02-06
+UK_GDP,Quarterly,Millions of Pounds,Seasonally Adjusted,2025-03-28 13:15:02-05
+US_GDP,Quarterly,Billions of Dollars,Seasonally Adjusted Annual Rate,2025-04-30 09:39:46-05
+UK_UNEMPLOYMENT,Monthly,Growth rate previous period,Seasonally Adjusted,2024-04-10 11:07:28-05
+CHINA_POP,Annual,Persons,Not Seasonally Adjusted,2024-07-02 14:06:05-05
+UK_POP,Annual,Persons,Not Seasonally Adjusted,2024-07-02 14:06:41-05
+US_POP,Annual,Persons,Not Seasonally Adjusted,2024-07-02 14:06:02-05
+US_INTEREST_RATE,Monthly,Percent,Not Seasonally Adjusted,2025-05-01 16:37:08-05
+US_3M_YIELD,Daily,Percent,Not Seasonally Adjusted,2025-05-05 15:17:12-05
+GERMANY_3M_YIELD,Monthly,Percent,Not Seasonally Adjusted,2025-04-15 14:32:40-05
+GERMANY_2Y_YIELD,Monthly,Percent,Not Seasonally Adjusted,2025-04-15 14:32:39-05
+UK_2Y_YIELD,Monthly,Percent,Not Seasonally Adjusted,2025-04-15 14:31:55-05
+US_2Y_YIELD,Daily,Percent,Not Seasonally Adjusted,2025-05-05 15:17:04-05
+UK_10Y_YIELD,Monthly,Percent,Not Seasonally Adjusted,2025-04-15 14:31:55-05
+US_10Y_YIELD,Daily,Percent,Not Seasonally Adjusted,2025-05-05 15:16:58-05
+GERMANY_10Y_YIELD,Monthly,Percent,Not Seasonally Adjusted,2025-04-15 14:32:39-05
+CHINA_M2,Monthly,National Currency,Not Seasonally Adjusted,2019-11-11 07:02:02-06
+UK_M2,Monthly,Pound Sterling,Seasonally Adjusted,2024-01-12 14:22:04-06
+US_M2,Monthly,Billions of Dollars,Seasonally Adjusted,2025-04-22 12:00:51-05
+UK_CPI,Monthly,Index 2015=100,Not Seasonally Adjusted,2025-04-15 14:20:20-05
+UK_TRADE_BAL,Quarterly,"US Dollars, Sum Over Component Sub-periods",Seasonally Adjusted,2017-04-15 13:07:22-05
+UK_FOREX_RESERVES,Monthly,Millions of Dollars,Not Seasonally Adjusted,2025-04-21 08:37:36-05
+CLI,Monthly,Index,Seasonally Adjusted,2024-04-10 11:27:05-05
+NFCI,"Weekly, Ending Friday",Index,Not Seasonally Adjusted,2025-04-30 07:39:04-05
+VIX,"Daily, Close",Index,Not Seasonally Adjusted,2025-05-05 08:36:04-05
+BRENT_OIL,Daily,Dollars per Barrel,Not Seasonally Adjusted,2025-04-30 12:14:01-05
+COPPER,Monthly,U.S. Dollars per Metric Ton,Not Seasonally Adjusted,2025-04-10 10:28:08-05
