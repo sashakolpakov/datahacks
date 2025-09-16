@@ -16,7 +16,7 @@ from sklearn.decomposition import PCA
 from sklearn.ensemble import IsolationForest
 
 # Import the data collection module
-from datacollect import main, Config
+from data_collect import main, Config
 
 # Initialize the Dash app
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
@@ -772,7 +772,7 @@ def run_pca_analysis(n_clicks, selected_features, n_components):
     return html.Div(results), None
 
 if __name__ == '__main__':
-    app.run_server(debug=True)
+    app.run(debug=True)
 @app.callback(
     Output("collapse", "is_open"),
     [Input("collapse-button", "n_clicks")],

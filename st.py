@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 import base64
 
 # Import the data collection module
-from datacollect import main, Config
+from data_collect import main, Config
 
 # App title and description
 st.title("Forex Data Collection Tool")

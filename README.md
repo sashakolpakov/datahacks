@@ -64,7 +64,7 @@ POLYGON_API_KEY=your_polygon_api_key_here
 ### 1. Basic Data Collection
 
 ```python
-from datacollect import main, Config
+from data_collect import main, Config
 
 # Collect data for GBP/AUD pair
 Config.PRIMARY_PAIR = "GBPAUD"
@@ -75,7 +75,7 @@ print(f"Collected {len(data)} rows of data")
 ### 2. FRED Data Fetching
 
 ```python
-from fredfetcher2 import get_fred_data
+from fred_fetcher import get_fred_data
 import os
 from datetime import datetime, timedelta
 
@@ -124,15 +124,15 @@ python fancy_dash.py
 
 | Script | Purpose | Key Features |
 |--------|---------|-------------|
-| `datacollect.py` | Main data collection engine | Multi-API integration, error handling, data validation |
-| `fredfetcher2.py` | FRED API specialist | 40+ economic indicators, metadata collection |
+| `data_collect.py` | Main data collection engine | Multi-API integration, error handling, data validation |
+| `fred_fetcher.py` | FRED API specialist | 40+ economic indicators, metadata collection |
 | `merge_macro_data.py` | Data enrichment pipeline | World Bank + FRED + OECD integration |
 | `st.py` | Streamlit web interface | Interactive data collection, real-time preview |
 | `fancy_dash.py` | Advanced analytics dashboard | ML clustering, PCA, anomaly detection |
 
 ### Configuration
 
-The `Config` class in `datacollect.py` controls:
+The `Config` class in `data_collect.py` controls:
 
 ```python
 class Config:
@@ -285,7 +285,7 @@ Date        | Close  | UK_GDP | US_GDP | VIX  | Gold_Price
 
 3. **Run data collection**:
    ```bash
-   python datacollect.py
+   python data_collect.py
    ```
 
 4. **Launch interactive dashboard**:
