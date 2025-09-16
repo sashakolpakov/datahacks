@@ -7,7 +7,14 @@ import pandas as pd
 import wbgapi as wb
 import os
 from pandas_datareader import data as pdr
-from pandasdmx import Request
+# from pandasdmx import Request  # Disabled due to pydantic compatibility issues
+# Alternative OECD data access
+try:
+    from oecd_fetcher import OECDDataFetcher
+    OECD_AVAILABLE = True
+except ImportError:
+    print("Warning: OECD fetcher not available. OECD data will be skipped.")
+    OECD_AVAILABLE = False
 from datetime import datetime
 
 # --- CONFIG ---
@@ -82,19 +89,39 @@ for label, code in fred_series.items():
 
 df_fred = pd.concat(fred_frames, axis=1) if fred_frames else pd.DataFrame()
 
-# --- STEP 4: Pull OECD Unemployment via SDMX ---
-oecd = Request('OECD')
+# --- STEP 4: Pull OECD Data ---
 oecd_frames = []
 
-for code, country in [('LRHUTTTT.STSA.M.AUS', 'Australia'), ('LRHUTTTT.STSA.M.GBR', 'UK')]:
-    try:
-        resp = oecd.data(resource_id='MEI', key=code, params={'startPeriod': '2000'})
-        df = resp.to_pandas()
-        df = df.rename(f'{country} Unemployment Rate [OECD]')
-        df = df.resample('D').ffill()
-        oecd_frames.append(df)
-    except Exception as e:
-        print(f"⚠️ OECD fetch failed for {country}: {e}")
+if OECD_AVAILABLE:
+    print("📊 Fetching OECD data...")
+    fetcher = OECDDataFetcher()
+
+    # Try to get Composite Leading Indicators (CLI)
+    for country_code, country_name in [('AUS', 'Australia'), ('GBR', 'UK'), ('USA', 'US')]:
+        try:
+            cli_data = fetcher.get_cli_data(country_code, start_year=2000, end_year=datetime.now().year)
+            if cli_data is not None and not cli_data.empty:
+                # Process and add to frames
+                cli_series = pd.Series(name=f'{country_name} CLI [OECD]', dtype=float)
+                print(f"✅ OECD CLI data for {country_name}: {len(cli_data)} points")
+                oecd_frames.append(cli_series)
+            else:
+                print(f"⚠️ No OECD CLI data available for {country_name}")
+        except Exception as e:
+            print(f"⚠️ OECD fetch failed for {country_name}: {e}")
+
+    # Alternative: Try pandas-datareader approach
+    if not oecd_frames:
+        try:
+            print("Trying alternative OECD data via pandas-datareader...")
+            cli_data = fetcher.get_data_via_datareader('CLI')
+            if cli_data is not None and not cli_data.empty:
+                print(f"✅ OECD data via datareader: {cli_data.shape}")
+                # Process the data if successful
+        except Exception as e:
+            print(f"⚠️ Alternative OECD approach failed: {e}")
+else:
+    print("⚠️ OECD data unavailable - pandasdmx compatibility issues")
 
 df_oecd = pd.concat(oecd_frames, axis=1) if oecd_frames else pd.DataFrame()
 

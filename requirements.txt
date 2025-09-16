@@ -1,0 +1,32 @@
+# Core data processing
+pandas>=2.0.0
+numpy>=1.20.0
+requests>=2.27.0
+
+# Environment and configuration
+python-dotenv>=1.0.0
+
+# API clients
+fredapi>=0.5.0
+wbgapi>=1.0.0
+pandas-datareader>=0.10.0
+
+# OECD data access alternatives (pandasdmx has pydantic 2.x compatibility issues)
+# Use pandas-datareader for OECD data or the custom oecd_fetcher.py module
+
+# Web dashboards
+streamlit>=1.40.0
+dash>=3.0.0
+dash-bootstrap-components>=1.6.0
+
+# Visualization
+plotly>=6.0.0
+
+# Machine learning (for advanced analytics)
+scikit-learn>=1.3.0
+
+# Data parsing
+lxml>=6.0.0
+
+# Date handling
+python-dateutil>=2.8.0

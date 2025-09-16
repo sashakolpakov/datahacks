@@ -15,8 +15,8 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.decomposition import PCA
 from sklearn.ensemble import IsolationForest
 
-# Import the data collection module (from our previous script)
-from enhanced_forex_data_script import main, Config
+# Import the data collection module
+from datacollect import main, Config
 
 # Initialize the Dash app
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
